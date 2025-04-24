@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Pollution Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1e88e5;
+            --primary-light: #e3f2fd;
+            --primary-dark: #0d47a1;
+            --secondary-color: #e53935;
+            --secondary-light: #ffebee;
+            --secondary-dark: #b71c1c;
+            --accent-color: #00c853;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #37474f;
+            --text-light: #78909c;
+            --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 40px 0 60px;
+            margin-bottom: 0;
+            position: relative;
+            box-shadow: var(--shadow-md);
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+        }
+
+        .header-content {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            letter-spacing: -0.5px;
+        }
+
+        .header-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+            margin: 20px 0 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2 i {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .main-content {
+            margin-top: -40px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .search-panel {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .search-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-title i {
+            color: var(--primary-color);
+        }
+        
+        .form-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-color);
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+            color: var(--text-color);
+            background-color: #f9fafc;
+        }
+
+        .input-control:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.2);
+            background-color: white;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            bottom: 15px;
+            color: var(--text-light);
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 12px rgba(30, 136, 229, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(30, 136, 229, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            padding: 25px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--primary-color);
+        }
+
+        .stat-card:nth-child(2)::before {
+            background-color: var(--secondary-color);
+        }
+
+        .stat-card:nth-child(3)::before {
+            background-color: var(--accent-color);
+        }
+
+        .stat-card h3 {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .stat-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            opacity: 0.2;
+            color: var(--primary-dark);
+        }
+
+        .chart-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: var(--transition);
+        }
+
+        .chart-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        footer {
+            background: linear-gradient(to right, var(--primary-dark), var(--primary-color));
+            color: white;
+            padding: 40px 0;
+            margin-top: 60px;
+            text-align: center;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .footer-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .footer-text {
+            opacity: 0.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .footer-link {
+            color: white;
+            opacity: 0.8;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-link:hover {
+            opacity: 1;
+        }
+
+        .comparison-legend {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 20px 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .country1-color {
+            background-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.3);
+        }
+
+        .country2-color {
+            background-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.3);
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-info {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .form-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .input-group {
+                width: 100%;
+            }
+            
+            .chart-container {
+                height: 350px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison-legend {
+                flex-direction: column;
+                gap: 10px;
+                align-items: center;
+            }
+        }
+
+        /* Animation and enhanced visuals */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chart-card, .stat-card, .search-panel {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+
+        /* Tooltip styling */
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1><i class="fas fa-globe-americas"></i> Global Pollution Monitor</h1>
+                <p class="header-subtitle">Interactive visualization of pollution trends and comparative analysis across different countries</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="container main-content">
+        <div class="search-panel">
+            <h3 class="search-title"><i class="fas fa-search"></i> Compare Countries</h3>
+            <form method="get">
+                <div class="form-group">
+                    <div class="input-group">
+                        <label for="country1" class="input-label">First Country</label>
+                        <input type="text" id="country1" name="country1" class="input-control" placeholder="Enter first country (e.g. India)" value="{{ country1 }}">
+                        <i class="fas fa-map-marker-alt input-icon"></i>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="country2" class="input-label">Second Country</label>
+                        <input type="text" id="country2" name="country2" class="input-control" placeholder="Enter second country (e.g. China)" value="{{ country2 }}">
+                        <i class="fas fa-map-marker-alt input-icon"></i>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-chart-line"></i> Compare Trends
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-globe-asia stat-icon"></i>
+                <h3>Global Average</h3>
+                <div class="stat-value">65.3</div>
+                <div class="stat-label">Pollution Index</div>
+            </div>
+            
+            <div class="stat-card">
+                <i class="fas fa-smog stat-icon"></i>
+                <h3>Most Polluted</h3>
+                <div class="stat-value">Bangladesh</div>
+                <div class="stat-label">Index: 87.9</div>
+            </div>
+            
+            <div class="stat-card">
+                <i class="fas fa-leaf stat-icon"></i>
+                <h3>Least Polluted</h3>
+                <div class="stat-value">Finland</div>
+                <div class="stat-label">Index: 23.7</div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h2><i class="fas fa-chart-bar"></i> Global Pollution Trends</h2>
+            <div class="chart-container">
+                <canvas id="yearChart"></canvas>
+            </div>
+        </div>
+
+        {% if country1 and country2 %}
+        <div class="chart-card">
+            <h2><i class="fas fa-chart-line"></i> Country Comparison</h2>
+            
+            <div class="comparison-legend">
+                <div class="legend-item">
+                    <div class="legend-color country1-color"></div>
+                    <span>{{ country1.capitalize() }}</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color country2-color"></div>
+                    <span>{{ country2.capitalize() }}</span>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </div>
+        {% elif country1 %}
+        <div class="chart-card">
+            <h2><i class="fas fa-chart-line"></i> Pollution Trend in {{ country1.capitalize() }}</h2>
+            <div class="chart-container">
+                <canvas id="country1Chart"></canvas>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <span>Enter two countries above to see a comparative analysis of pollution trends.</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">Global Pollution Monitor</div>
+                <p class="footer-text">Data sourced from environmental monitoring stations worldwide. Updated quarterly with the latest pollution measurements.</p>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">About</a>
+                    <a href="#" class="footer-link">Data Sources</a>
+                    <a href="#" class="footer-link">Methodology</a>
+                    <a href="#" class="footer-link">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const yearData = {{ year_data|tojson }};
+        const years = yearData.map(d => d.Year);
+        const avgIndex = yearData.map(d => d["Pollution Index"]);
+        
+        const ctx1 = document.getElementById('yearChart');
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: years,
+                datasets: [{
+                    label: 'Global Average Pollution Index',
+                    data: avgIndex,
+                    backgroundColor: 'rgba(30, 136, 229, 0.7)',
+                    borderColor: 'rgba(30, 136, 229, 1)',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barThickness: 'flex',
+                    maxBarThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        // Setting a smaller range to make trends more visible
+                        min: Math.max(0, Math.min(...avgIndex) - 5), // Set minimum to make changes visible
+                        max: Math.max(...avgIndex) + 5, // Add some room at the top
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.03)'
+                        },
+                        ticks: {
+                            font: {
+                                family: "'Segoe UI', 'Roboto', sans-serif"
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                family: "'Segoe UI', 'Roboto', sans-serif"
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                family: "'Segoe UI', 'Roboto', sans-serif",
+                                size: 12
+                            },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        padding: 12,
+                        cornerRadius: 6,
+                        bodyFont: {
+                            family: "'Segoe UI', 'Roboto', sans-serif"
+                        },
+                        titleFont: {
+                            family: "'Segoe UI', 'Roboto', sans-serif",
+                            weight: 'bold'
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return `Pollution Index: ${context.raw.toFixed(2)}`;
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+
+        {% if country1 and country2 %}
+        const country1Data = {{ country1_data|tojson }};
+        const country2Data = {{ country2_data|tojson }};
+        const yearsCountry = country1Data.map(d => d.Year);
+        const pollution1 = country1Data.map(d => d["Pollution Index"]);
+        const pollution2 = country2Data.map(d => d["Pollution Index"]);
+
+        const ctxComparison = document.getElementById('comparisonChart');
+        new Chart(ctxComparison, {
+            type: 'line',
+            data: {
+                labels: yearsCountry,
+                datasets: [
+                    {
+                        label: '{{ country1.capitalize() }}',
+                        data: pollution1,
+                        borderColor: 'rgba(30, 136, 229, 1)',
+                        backgroundColor: 'rgba(30, 136, 229, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: 'rgba(30, 136, 229, 1)',
+                        pointBorderColor: '#fff',
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: '{{ country2.capitalize() }}',
+                        data: pollution2,
+                        borderColor: 'rgba(229, 57, 53, 1)',
+                        backgroundColor: 'rgba(229, 57, 53, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: 'rgba(229, 57, 53, 1)',
+                        pointBorderColor: '#fff',
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.03)'
+                        },
+                        ticks: {
+                            font: {
+                                family: "'Segoe UI', 'Roboto', sans-serif"
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                family: "'Segoe UI', 'Roboto', sans-serif"
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                family: "'Segoe UI', 'Roboto', sans-serif",
+                                size: 12
+                            },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        padding: 12,
+                        cornerRadius: 6,
+                        bodyFont: {
+                            family: "'Segoe UI', 'Roboto', sans-serif"
+                        },
+                        titleFont: {
+                            family: "'Segoe UI', 'Roboto', sans-serif",
+                            weight: 'bold'
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+        {% elif country1 %}
+        const country1Data = {{ country1_data|tojson }};
+        const yearsCountry = country1Data.map(d => d.Year);
+        const pollution1 = country1Data.map(d => d["Pollution Index"]);
+
+        const ctxCountry1 = document.getElementById('country1Chart');
+        new Chart(ctxCountry1, {
+            type: 'line',
+            data: {
+                labels: yearsCountry,
+                datasets: [{
+                    label: '{{ country1.capitalize() }} Pollution Index',
+                    data: pollution1,
+                    borderColor: 'rgba(30, 136, 229, 1)',
+                    backgroundColor: 'rgba(30, 136, 229, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgba(30, 136, 229, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.03)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        padding: 12,
+                        cornerRadius: 6
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+        {% endif %}
+    </script>
+</body>
+</html>
